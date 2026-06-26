@@ -11,7 +11,24 @@ export default async function handler(req, res) {
   const { message } = req.body;
 
   // Read the PDF
-  const pdfText = await readPDF();
+  const pdfText = `
+Raju Silks & Sarees
+
+Products:
+- Silk Sarees
+- Cotton Sarees
+- Bridal Sarees
+
+Delivery:
+- 3-7 days across India
+- Cash on Delivery available
+
+Returns:
+- 7-day return policy
+
+Support:
+- 9 AM to 8 PM
+`;
 
   console.log("PDF Length:", pdfText.length);
   console.log(pdfText.substring(0, 1000));
