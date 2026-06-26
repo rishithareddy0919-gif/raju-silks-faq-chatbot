@@ -69,9 +69,18 @@ ${message}
 
     const data = await response.json();
 
-    const reply =
-      data?.candidates?.[0]?.content?.parts?.[0]?.text ||
-      "I'm sorry, I don't have that information. Please contact customer support.";
+console.log("Gemini API Response:");
+console.log(JSON.stringify(data, null, 2));
+
+if (!response.ok) {
+  return res.status(response.status).json({
+    error: data.error || data,
+  });
+}
+
+const reply =
+  data?.candidates?.[0]?.content?.parts?.[0]?.text ||
+  "I'm sorry, I don't have that information. Please contact customer support.";
 
     return res.status(200).json({
       reply,
