@@ -42,7 +42,9 @@ const response = await fetch("/api/chat", {
 
 const data = await response.json();
 
-const botReply = data.reply;      setMessages((prev) => [
+const botReply = data.reply || data.message || data.error;
+
+      setMessages((prev) => [
         ...prev,
         {
           id: `bot-${Date.now()}`,

@@ -1,10 +1,10 @@
 import fs from "fs";
-import pdfParse from "pdf-parse";
+import * as pdfParse from "pdf-parse";
 
 export async function readPDF() {
-  const dataBuffer = fs.readFileSync("./data/Raju_Silks_Catalog.pdf");
+  const buffer = fs.readFileSync("./data/Raju_Silks_Catalog.pdf");
 
-  const data = await pdfParse(dataBuffer);
+  const data = await pdfParse.default(buffer);
 
   return data.text;
 }
