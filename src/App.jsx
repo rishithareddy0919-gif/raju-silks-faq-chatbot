@@ -1,26 +1,11 @@
 import React, { useState, useEffect } from "react";
 import ChatWindow from "./components/ChatWindow";
-import SettingsModal from "./components/SettingsModal";
-import { askGemini, BUSINESS_CONTEXT } from "./utils/gemini";
+import { BUSINESS_CONTEXT } from "./utils/gemini";
 
 export default function App() {
   const [messages, setMessages] = useState([]);
   const [inputValue, setInputValue] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [apiKey, setApiKey] = useState(() => {
-    return localStorage.getItem("gemini_api_key") || "";
-  });
-
-  // Save key to local storage
-  const handleSaveApiKey = (key) => {
-    setApiKey(key);
-    if (key) {
-      localStorage.setItem("gemini_api_key", key);
-    } else {
-      localStorage.removeItem("gemini_api_key");
-    }
-  };
 
   const getFormattedTime = () => {
     return new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
@@ -45,9 +30,19 @@ export default function App() {
 
     try {
       // Call Gemini utility
-      const botReply = await askGemini(newUserMessage.text, updatedMessages, apiKey);
-      
-      setMessages((prev) => [
+const response = await fetch("/api/chat", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify({
+    message: newUserMessage.text,
+  }),
+});
+
+const data = await response.json();
+
+const botReply = data.reply;      setMessages((prev) => [
         ...prev,
         {
           id: `bot-${Date.now()}`,
@@ -124,17 +119,6 @@ export default function App() {
                 <line x1="14" y1="11" x2="14" y2="17"></line>
               </svg>
             </button>
-            <button 
-              onClick={() => setIsSettingsOpen(true)} 
-              className="action-btn"
-              title="Configure API key"
-              aria-label="API Settings"
-            >
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="12" cy="12" r="3"></circle>
-                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
-              </svg>
-            </button>
           </div>
         </header>
 
@@ -146,21 +130,7 @@ export default function App() {
         />
 
         {/* Input Bar */}
-        <div className="chat-input-container">
-          {!apiKey && (
-            <div className="api-warning-banner">
-              <span className="warning-text">
-                ⚠️ Running in Offline Demo Mode.
-              </span>
-              <button 
-                onClick={() => setIsSettingsOpen(true)}
-                className="warning-action"
-              >
-                Configure Gemini API Key
-              </button>
-            </div>
-          )}
-          
+        <div className="chat-input-container">          
           <form onSubmit={handleSubmit} className="chat-input-form">
             <input
               type="text"
@@ -186,13 +156,6 @@ export default function App() {
         </div>
       </div>
 
-      {/* Settings Panel Overlay */}
-      <SettingsModal 
-        isOpen={isSettingsOpen} 
-        onClose={() => setIsSettingsOpen(false)} 
-        apiKey={apiKey} 
-        onSaveKey={handleSaveApiKey} 
-      />
     </div>
   );
 }
