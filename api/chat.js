@@ -8,12 +8,15 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { message } = req.body;
+  const { message } = req.body;
 
-    // Read the PDF
-    const pdfText = await readPDF();
+  // Read the PDF
+  const pdfText = await readPDF();
 
-    const apiKey = process.env.GEMINI_API_KEY;
+  console.log("PDF Length:", pdfText.length);
+  console.log(pdfText.substring(0, 1000));
+
+  const apiKey = process.env.GEMINI_API_KEY;
 
     const response = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
