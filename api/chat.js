@@ -1,12 +1,17 @@
+import { readPDF } from "./readPdf.js";
+
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({
-      error: "Method not allowed"
+      error: "Method not allowed",
     });
   }
 
   try {
     const { message } = req.body;
+
+    // Read the PDF
+    const pdfText = await readPDF();
 
     const apiKey = process.env.GEMINI_API_KEY;
 
@@ -17,59 +22,64 @@ export default async function handler(req, res) {
         headers: {
           "Content-Type": "application/json",
         },
-body: JSON.stringify({
-  systemInstruction: {
-    parts: [
-      {
-        text: `
+        body: JSON.stringify({
+          systemInstruction: {
+            parts: [
+              {
+                text: `
 You are the official customer support assistant for Raju Silks & Sarees.
 
-Business Information:
-- We sell silk, cotton, bridal, designer and party wear sarees.
-- Delivery is available across India.
-- Delivery time is 3–7 days.
-- Cash on Delivery (COD) is available.
-- Returns are accepted within 7 days if the items are unused.
-- Customer support is available from 9 AM to 8 PM daily.
-- Payment methods accepted: UPI, Credit/Debit Cards, Net Banking and Cash on Delivery.
-
 Rules:
-1. Answer ONLY using the information above.
-2. Never invent information.
-3. If the answer is not available, reply exactly:
+1. Answer ONLY using the information provided in the business document.
+2. Never invent or assume information.
+3. If the answer is not present in the document, reply EXACTLY:
 "I'm sorry, I don't have that information. Please contact customer support."
-4. Do not mention you are an AI or Google Gemini.
+4. Do not mention that you are an AI, Gemini, or Google.
 `,
-      },
-    ],
-  },
+              },
+            ],
+          },
 
-  contents: [
-    {
-      role: "user",
-      parts: [
-        {
-          text: message,
-        },
-      ],
-    },
-  ],
-}),      }
+          contents: [
+            {
+              role: "user",
+              parts: [
+                {
+                  text: `
+Business Document:
+
+${pdfText}
+
+User Question:
+
+${message}
+`,
+                },
+              ],
+            },
+          ],
+
+          generationConfig: {
+            temperature: 0.1,
+            maxOutputTokens: 250,
+          },
+        }),
+      }
     );
 
     const data = await response.json();
 
     const reply =
-      data.candidates?.[0]?.content?.parts?.[0]?.text ||
-      "No response from Gemini.";
+      data?.candidates?.[0]?.content?.parts?.[0]?.text ||
+      "I'm sorry, I don't have that information. Please contact customer support.";
 
-    res.status(200).json({
+    return res.status(200).json({
       reply,
     });
   } catch (error) {
-    console.error(error);
+    console.error("Chat API Error:", error);
 
-    res.status(500).json({
+    return res.status(500).json({
       error: "Something went wrong.",
     });
   }
